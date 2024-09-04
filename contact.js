@@ -1,6 +1,7 @@
 const fs = require('fs');
 
-const chalk = require('chalk')
+const chalk = require('chalk');
+const yargs = require('yargs');
 
 
 // membuat folder data
@@ -15,11 +16,19 @@ if(!fs.existsSync(dataPath)){
     fs.writeFileSync(dataPath, '[]','utf-8')
 }
 
-
-const simpanContact = (nama, noHp, email) => {
-    const contact = { nama,noHp,email}
+const loadContact = () => {
+   
     const file= fs.readFileSync('data/contacts.json', 'utf-8');
     const contacts = JSON.parse(file)
+    return contacts;
+}
+
+
+const simpanContact = (nama, noHp, email) => {
+    // const file= fs.readFileSync('data/contacts.json', 'utf-8');
+    // const contacts = JSON.parse(file)
+    const contact = { nama,noHp,email}
+    const contacts = loadContact()
 
     // cek duplikat
     const duplikat = contacts.find((contact) => contact.nama === nama);
@@ -49,10 +58,72 @@ const simpanContact = (nama, noHp, email) => {
 
 
     contacts.push(contact);
+
     fs.writeFileSync('data/contacts.json',JSON.stringify(contacts))
     console.log('Terimakasih sudah memasukan data')
+
     console.log(contacts)
 
 }
 
-module.exports = {simpanContact}
+// display nama & number phone contact
+const listContact = () => {
+    const contacts = loadContact();
+    console.log(chalk.cyan.inverse.bold('Daftar contact : '))
+    contacts.forEach((contact, i) => {
+        console.log(`${i + 1 }. ${contact.nama} - ${contact.noHp}`)
+    })
+}
+
+
+// Display detail contact 
+const detailContact = (nama) => {
+    const contacts = loadContact();
+
+    const contact = contacts.find((contact)=> contact.nama.toLowerCase() === nama.toLowerCase())
+    
+    if(!contact){
+        console.log(
+            chalk.red.inverse.bold(`${nama} tidak ditemukan`)
+        )
+        return false;
+    }else {
+        console.log(
+            chalk.green.inverse.bold(`Data ditemukan !\n`)
+        )
+        console.log(
+            chalk.red.inverse.bold(`Nama :  ${contact.nama}`)
+        )
+        if(contact.email){
+            console.log(
+                chalk.red.inverse.bold(`Email : ${contact.email}`)
+            )
+        }
+        console.log(
+            chalk.red.inverse.bold(`No Hp : ${contact.noHp}`)
+        )
+    }
+}
+
+// Delete contact by name
+const deleteContact = (nama) => {
+    const contact = loadContact();
+    const newContact = contact.filter((contact) => contact.nama.toLowerCase() !== nama.toLowerCase()
+);
+console.log(newContact)
+console.log(contact)
+
+if(contact.length === newContact.length){
+    console.log(chalk.red.inverse.bold(`${nama} tidak ditemukan!`));
+    return false;
+}
+
+fs.writeFileSync('data/contacts.json',JSON.stringify(newContact))
+console.log(`${nama} Berhasil dihapus`)
+
+
+}
+
+
+
+module.exports = {simpanContact, listContact, detailContact, deleteContact}
